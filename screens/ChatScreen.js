@@ -1,57 +1,49 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, Button, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Message from "../components/Message";
+import { Button } from "react-native-paper";
 
 const ChatScreen = ({ route }) => {
     const { username } = route.params;
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const scrollViewRef = useRef(); // Referencia para el ScrollView
 
-    // Cargar mensajes al iniciar la pantalla
     useEffect(() => {
-        const loadMessages = async () => {
-            try {
-                const storedMessages = await AsyncStorage.getItem("messages");
-                if (storedMessages) {
-                    setMessages(JSON.parse(storedMessages));
-                }
-            } catch (error) {
-                console.error("Error al cargar mensajes:", error);
-            }
-        };
         loadMessages();
     }, []);
 
-    // Guardar mensajes cuando cambien
-    useEffect(() => {
-        const saveMessages = async () => {
-            try {
-                await AsyncStorage.setItem("messages", JSON.stringify(messages));
-            } catch (error) {
-                console.error("Error al guardar mensajes:", error);
+    const loadMessages = async () => {
+        setIsLoading(true);
+        try {
+            const storedMessages = await AsyncStorage.getItem("messages");
+            if (storedMessages) {
+                setMessages(JSON.parse(storedMessages));
             }
-        };
-        saveMessages();
-    }, [messages]);
-
-    // Desplazarse al final al enviar un mensaje
-    useEffect(() => {
-        if (messages.length > 0) {
-            scrollViewRef.current.scrollToEnd({ animated: true });
+        } catch (error) {
+            console.error("Error loading messages:", error);
         }
-    }, [messages]);
+        setIsLoading(false);
+    };
 
-    const handleSend = () => {
-        if (newMessage.trim()) {
-            setIsLoading(true);
-            setTimeout(() => {
-                setMessages([...messages, { id: messages.length + 1, text: newMessage, isUser: true }]);
-                setNewMessage("");
-                setIsLoading(false);
-            }, 1000);
+    const handleSend = async () => {
+        if (!newMessage.trim()) return;
+
+        const message = {
+            id: Date.now(),
+            text: newMessage,
+            username,
+            timestamp: new Date().toLocaleTimeString(),
+        };
+
+        const updatedMessages = [...messages, message];
+        setMessages(updatedMessages);
+        setNewMessage("");
+
+        try {
+            await AsyncStorage.setItem("messages", JSON.stringify(updatedMessages));
+        } catch (error) {
+            console.error("Error saving message:", error);
         }
     };
 
@@ -60,23 +52,25 @@ const ChatScreen = ({ route }) => {
             await AsyncStorage.removeItem("messages");
             setMessages([]);
         } catch (error) {
-            console.error("Error al borrar mensajes:", error);
+            console.error("Error clearing messages:", error);
         }
     };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerText}>ChatDAP - {username}</Text>
-                <Button title="Borrar" onPress={handleClear} color="#fff" />
+                <Text style={styles.headerText}>Chat</Text>
+                <Button mode="contained" onPress={handleClear}>
+                    Borrar Mensajes
+                </Button>
             </View>
-            <ScrollView
-                ref={scrollViewRef}
-                style={styles.messagesContainer}
-                onContentSizeChange={() => scrollViewRef.current.scrollToEnd({ animated: true })}
-            >
-                {messages.map((message) => (
-                    <Message key={message.id} text={message.text} isUser={message.isUser} />
+            <ScrollView style={styles.messagesContainer}>
+                {messages.map((msg) => (
+                    <View key={msg.id} style={styles.message}>
+                        <Text style={styles.messageUsername}>{msg.username}</Text>
+                        <Text style={styles.messageText}>{msg.text}</Text>
+                        <Text style={styles.messageTimestamp}>{msg.timestamp}</Text>
+                    </View>
                 ))}
             </ScrollView>
             <View style={styles.inputContainer}>
@@ -89,7 +83,9 @@ const ChatScreen = ({ route }) => {
                 {isLoading ? (
                     <ActivityIndicator color="#6200ee" />
                 ) : (
-                    <Button title="Enviar" onPress={handleSend} />
+                    <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                        <Text style={styles.sendButtonText}>Enviar</Text>
+                    </TouchableOpacity>
                 )}
             </View>
         </View>
@@ -117,6 +113,24 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 16,
     },
+    message: {
+        backgroundColor: "#fff",
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 8,
+    },
+    messageUsername: {
+        fontWeight: "bold",
+        color: "#6200ee",
+    },
+    messageText: {
+        marginTop: 4,
+    },
+    messageTimestamp: {
+        fontSize: 12,
+        color: "#666",
+        marginTop: 4,
+    },
     inputContainer: {
         flexDirection: "row",
         padding: 8,
@@ -126,12 +140,25 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        height: 40,
+        height: 50,
         borderColor: "#ccc",
         borderWidth: 1,
-        borderRadius: 20,
+        borderRadius: 25,
         paddingHorizontal: 16,
         marginRight: 8,
+        backgroundColor: "#fff",
+    },
+    sendButton: {
+        backgroundColor: "#6200ee",
+        borderRadius: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    sendButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
     },
 });
 

@@ -31,9 +31,9 @@
 
 ## Sección 6: Frontend
 - [x] Configurar React Native + Expo
-- [ ] Crear interfaz de usuario básica
-- [ ] Integrar autenticación en el frontend
-- [ ] Implementar chat de texto en el frontend
+- [x] Crear interfaz de usuario básica
+- [x] Integrar autenticación en el frontend
+- [x] Implementar chat de texto en el frontend
 - [ ] Implementar chat de voz en el frontend
 
 ## Sección 7: Despliegue

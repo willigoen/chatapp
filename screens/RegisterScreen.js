@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, ToastAndroid } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Button } from "react-native-paper";
 
 const RegisterScreen = ({ navigation }) => {
     const [username, setUsername] = useState("");
@@ -8,18 +9,26 @@ const RegisterScreen = ({ navigation }) => {
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const handleRegister = async () => {
+        console.log("Botón de registro presionado");
+        if (!username.trim()) {
+            alert("El nombre de usuario no puede estar vacío");
+            return;
+        }
+        if (password.length < 6) {
+            ToastAndroid.show("La contraseña debe tener al menos 6 caracteres", ToastAndroid.SHORT);
+            return;
+        }
         if (password !== confirmPassword) {
-            Alert.alert("Error", "Las contraseñas no coinciden");
+            ToastAndroid.show("Las contraseñas no coinciden", ToastAndroid.SHORT);
             return;
         }
 
         try {
-            // Guardar el usuario en AsyncStorage
             await AsyncStorage.setItem(username, password);
-            Alert.alert("Éxito", "Registro completado");
-            navigation.navigate("Login");
+            ToastAndroid.show("Registro completado", ToastAndroid.SHORT);
+            setTimeout(() => navigation.navigate("Login"), 1500);
         } catch (error) {
-            Alert.alert("Error", "No se pudo completar el registro");
+            ToastAndroid.show("No se pudo completar el registro", ToastAndroid.SHORT);
         }
     };
 
@@ -46,8 +55,12 @@ const RegisterScreen = ({ navigation }) => {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
             />
-            <Button title="Registrarse" onPress={handleRegister} />
-            <Button title="Iniciar Sesión" onPress={() => navigation.navigate("Login")} />
+            <Button mode="contained" onPress={handleRegister} style={styles.button}>
+                Registrarse
+            </Button>
+            <Button mode="outlined" onPress={() => navigation.navigate("Login")} style={styles.button}>
+                Iniciar Sesión
+            </Button>
         </View>
     );
 };
@@ -57,19 +70,26 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         padding: 16,
+        backgroundColor: "#f5f5f5",
     },
     title: {
         fontSize: 24,
-        marginBottom: 16,
+        marginBottom: 24,
         textAlign: "center",
+        color: "#6200ee",
+        fontWeight: "bold",
     },
     input: {
-        height: 40,
+        height: 50,
         borderColor: "#ccc",
         borderWidth: 1,
         marginBottom: 16,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        backgroundColor: "#fff",
+    },
+    button: {
+        marginTop: 16,
     },
 });
 
