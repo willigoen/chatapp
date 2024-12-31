@@ -30,6 +30,7 @@
 - [ ] Integrar autenticación en las llamadas de voz
 
 ## Sección 6: Frontend
+- [x] Configurar React Native + Expo
 - [ ] Crear interfaz de usuario básica
 - [ ] Integrar autenticación en el frontend
 - [ ] Implementar chat de texto en el frontend
