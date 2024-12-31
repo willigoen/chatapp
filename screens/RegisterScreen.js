@@ -1,19 +1,26 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RegisterScreen = ({ navigation }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
         if (password !== confirmPassword) {
             Alert.alert("Error", "Las contraseñas no coinciden");
             return;
         }
-        // Lógica de registro aquí
-        Alert.alert("Éxito", "Registro completado");
-        navigation.navigate("Login");
+
+        try {
+            // Guardar el usuario en AsyncStorage
+            await AsyncStorage.setItem(username, password);
+            Alert.alert("Éxito", "Registro completado");
+            navigation.navigate("Login");
+        } catch (error) {
+            Alert.alert("Error", "No se pudo completar el registro");
+        }
     };
 
     return (

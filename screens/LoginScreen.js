@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleLogin = () => {
-        // Simulación de autenticación
-        if (username === "usuario" && password === "contraseña") {
-            navigation.navigate("Chat", { username });
-        } else {
-            Alert.alert("Error", "Usuario o contraseña incorrectos");
+    const handleLogin = async () => {
+        try {
+            const storedPassword = await AsyncStorage.getItem(username);
+            if (storedPassword === password) {
+                navigation.navigate("Chat", { username });
+            } else {
+                Alert.alert("Error", "Usuario o contraseña incorrectos");
+            }
+        } catch (error) {
+            Alert.alert("Error", "No se pudo completar el inicio de sesión");
         }
     };
 
@@ -31,6 +36,7 @@ const LoginScreen = ({ navigation }) => {
                 onChangeText={setPassword}
             />
             <Button title="Iniciar Sesión" onPress={handleLogin} />
+            <Button title="Registrarse" onPress={() => navigation.navigate("Register")} />
         </View>
     );
 };
