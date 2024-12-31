@@ -46,6 +46,6 @@ app.include_router(server_router, prefix="/api/server", tags=["server"])
 app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
 
 if __name__ == "__main__":
-    logger.info("Iniciando servidor FastAPI en el puerto 5005")
+    logger.info("Iniciando servidor FastAPI en el puerto 8000")
     import uvicorn
-    uvicorn.run("main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

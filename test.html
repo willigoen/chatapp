@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba WebSocket y WebRTC</title>
+</head>
+<body>
+    <h1>Prueba de WebSocket y WebRTC</h1>
+    <button id="startCall">Iniciar Llamada</button>
+    <audio id="remoteAudio" autoplay></audio>
+    <script>
+        const ws = new WebSocket('ws://localhost:5005/voice-signal');
+        const peerConnection = new RTCPeerConnection();
+        const remoteAudio = document.getElementById('remoteAudio');
+
+        // Configurar WebRTC
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            remoteAudio.srcObject = event.streams[0];
+        };
+
+        // Manejar mensajes del servidor
+        ws.onmessage = async (event) => {
+            const message = JSON.parse(event.data);
+
+            if (message.type === 'offer') {
+                await peerConnection.setRemoteDescription(message.offer);
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                ws.send(JSON.stringify({ type: 'answer', answer }));
+            } else if (message.type === 'answer') {
+                await peerConnection.setRemoteDescription(message.answer);
+            } else if (message.type === 'candidate') {
+                await peerConnection.addIceCandidate(message.candidate);
+            }
+        };
+
+        // Iniciar llamada
+        document.getElementById('startCall').onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach((track) => {
+                peerConnection.addTrack(track, stream);
+            });
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            ws.send(JSON.stringify({ type: 'offer', offer }));
+        };
+    </script>
+</body>
+</html> 
